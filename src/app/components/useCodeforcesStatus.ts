@@ -75,7 +75,7 @@ export function useCodeforcesStatus(handle: string): CfStats {
           } else break;
         }
 
-        const recent: CfRecent[] = subs.slice(0, 10).map((s, i) => ({
+        const recent: CfRecent[] = subs.slice(0, 50).map((s, i) => ({
           id: `${s.creationTimeSeconds}-${s.problem.contestId ?? "x"}-${s.problem.index}-${i}`,
           problem: s.problem.name,
           contestId: s.problem.contestId,

@@ -15,6 +15,7 @@ export function ContestsScreen() {
   const { c } = useTheme();
   const [activePlatform, setActivePlatform] = useState("All");
   const [reminders, setReminders] = useState<Set<number>>(new Set());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const { contests, loading, error } = useClistContests(50);
 
   const enriched = useMemo(
@@ -27,29 +28,47 @@ export function ContestsScreen() {
     [contests],
   );
 
-  const filtered = activePlatform === "All"
-    ? enriched
-    : enriched.filter((x) => x.platform === activePlatform);
+  const filtered = enriched.filter((x) => {
+    if (activePlatform !== "All" && x.platform !== activePlatform) return false;
+    if (selectedDay !== null) {
+      const d = new Date(x.startDate);
+      d.setHours(0, 0, 0, 0);
+      if (d.getTime() !== selectedDay) return false;
+    }
+    return true;
+  });
 
   const calendarDays = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const set = new Set(enriched.map((x) => {
+    const counts = new Map<number, number>();
+    enriched.forEach((x) => {
       const d = new Date(x.startDate);
       d.setHours(0, 0, 0, 0);
-      return d.getTime();
-    }));
-    return Array.from({ length: 7 }, (_, i) => {
+      counts.set(d.getTime(), (counts.get(d.getTime()) ?? 0) + 1);
+    });
+    return Array.from({ length: 14 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       return {
+        ts: d.getTime(),
         day: d.toLocaleDateString("en", { weekday: "short" }),
         date: d.getDate(),
-        hasContest: set.has(d.getTime()),
+        month: d.toLocaleDateString("en", { month: "short" }),
+        count: counts.get(d.getTime()) ?? 0,
         isToday: i === 0,
       };
     });
   }, [enriched]);
+
+  const monthRangeLabel = useMemo(() => {
+    if (calendarDays.length === 0) return "";
+    const first = calendarDays[0];
+    const last = calendarDays[calendarDays.length - 1];
+    return first.month === last.month
+      ? `${first.month} ${first.date} – ${last.date}`
+      : `${first.month} ${first.date} – ${last.month} ${last.date}`;
+  }, [calendarDays]);
 
   const toggleReminder = (id: number) => {
     setReminders((prev) => {
@@ -64,15 +83,43 @@ export function ContestsScreen() {
       <h1 style={{ color: c.text, fontSize: 22, fontWeight: 700 }}>Contests</h1>
       <p style={{ color: c.textSecondary, fontSize: 13, marginTop: 2 }}>Upcoming competitive programming contests</p>
 
-      <div className="flex gap-2 mt-5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        {calendarDays.map((d, i) => (
-          <div key={i} className="flex flex-col items-center flex-shrink-0 rounded-xl px-3 py-2 min-w-[46px]"
-            style={{ background: d.isToday ? `${c.primary}20` : c.surface, border: d.isToday ? `1px solid ${c.primary}40` : `1px solid ${c.border}` }}>
-            <span style={{ color: c.textSecondary, fontSize: 10 }}>{d.day}</span>
-            <span style={{ color: d.isToday ? c.primary : c.text, fontSize: 16, fontWeight: 600, marginTop: 2 }}>{d.date}</span>
-            {d.hasContest && <div className="w-1 h-1 rounded-full mt-1" style={{ background: c.green }} />}
-          </div>
-        ))}
+      <div className="flex items-center justify-between mt-5">
+        <span style={{ color: c.text, fontSize: 13, fontWeight: 600 }}>{monthRangeLabel}</span>
+        {selectedDay !== null && (
+          <button onClick={() => setSelectedDay(null)} style={{ color: c.primary, fontSize: 11, fontWeight: 600 }}>
+            Clear filter
+          </button>
+        )}
+      </div>
+      <div className="flex gap-2 mt-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {calendarDays.map((d) => {
+          const isSelected = selectedDay === d.ts;
+          const active = isSelected || (selectedDay === null && d.isToday);
+          return (
+            <button
+              key={d.ts}
+              onClick={() => setSelectedDay(isSelected ? null : d.ts)}
+              className="flex flex-col items-center flex-shrink-0 rounded-xl px-3 py-2 min-w-[52px] active:scale-95 transition-all relative"
+              style={{
+                background: active ? `${c.primary}20` : c.surface,
+                border: active ? `1px solid ${c.primary}60` : `1px solid ${c.border}`,
+              }}
+            >
+              <span style={{ color: c.textSecondary, fontSize: 10 }}>{d.day}</span>
+              <span style={{ color: active ? c.primary : c.text, fontSize: 16, fontWeight: 600, marginTop: 2 }}>{d.date}</span>
+              {d.count > 0 ? (
+                <span
+                  className="mt-1 px-1.5 rounded-full"
+                  style={{ background: c.green, color: "#0b1018", fontSize: 9, fontWeight: 700, lineHeight: "12px" }}
+                >
+                  {d.count}
+                </span>
+              ) : (
+                <span style={{ height: 12, marginTop: 1, color: c.textSecondary, fontSize: 9 }}>·</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex gap-1 mt-5 p-1 rounded-xl overflow-x-auto" style={{ background: c.surface, scrollbarWidth: "none" }}>

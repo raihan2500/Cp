@@ -136,6 +136,7 @@ function getCfRank(rating: number) {
 export function HomeScreen() {
   const { c } = useTheme();
   const [reminderSet, setReminderSet] = useState(false);
+  const [recentLimit, setRecentLimit] = useState(8);
   const { handle, displayName, cfUser, cfStatus, lastDelta } = useUserInfo();
   const currentYear = new Date().getFullYear();
   const [activityYear, setActivityYear] = useState<number>(currentYear);
@@ -667,7 +668,7 @@ export function HomeScreen() {
                 No submissions found.
               </p>
             )}
-          {cfStatus.recent.slice(0, 8).map((s) => {
+          {cfStatus.recent.slice(0, recentLimit).map((s) => {
             const meta = verdictMeta(s.verdict);
             const Icon = meta.icon;
             const url = s.contestId
@@ -731,6 +732,38 @@ export function HomeScreen() {
               </a>
             );
           })}
+          {!cfStatus.loading && cfStatus.recent.length > recentLimit && (
+            <button
+              onClick={() => setRecentLimit((n) => n + 8)}
+              className="w-full py-2.5 rounded-xl active:scale-[0.99] transition-all"
+              style={{
+                background: `${c.primary}15`,
+                color: c.primary,
+                border: `1px solid ${c.primary}30`,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Show more
+            </button>
+          )}
+          {!cfStatus.loading &&
+            recentLimit > 8 &&
+            cfStatus.recent.length <= recentLimit && (
+              <button
+                onClick={() => setRecentLimit(8)}
+                className="w-full py-2.5 rounded-xl active:scale-[0.99] transition-all"
+                style={{
+                  background: `${c.textSecondary}12`,
+                  color: c.textSecondary,
+                  border: `1px solid ${c.border}`,
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                Show less
+              </button>
+            )}
         </div>
       </div>
     </div>

@@ -34,11 +34,16 @@ type Friend = {
 };
 
 const initialFriends: Friend[] = [
-  { name: "Sarah K.", delta: "+45", ratings: { codeforces: 1820, codechef: 1950, atcoder: 1600, leetcode: 2100 } },
-  { name: "Alex C.", delta: "+80", isYou: true, ratings: { codeforces: 1560, codechef: 1700, atcoder: 1400, leetcode: 1950 } },
-  { name: "Mike R.", delta: "+20", ratings: { codeforces: 1490, codechef: 1550, atcoder: 1380, leetcode: 1720 } },
-  { name: "Priya S.", delta: "-10", ratings: { codeforces: 1450, codechef: 1800, atcoder: 1500, leetcode: 1880 } },
-  { name: "John D.", delta: "+35", ratings: { codeforces: 1380, codechef: 1420, atcoder: 1250, leetcode: 1600 } },
+  { name: "Benq", delta: "+0", ratings: { codeforces: 3792, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "VivaciousAubergine", delta: "+0", ratings: { codeforces: 3647, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "Kevin114514", delta: "+0", ratings: { codeforces: 3603, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "jiangly", delta: "+0", ratings: { codeforces: 3583, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "strapple", delta: "+0", ratings: { codeforces: 3515, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "tourist", delta: "+0", isYou: true, ratings: { codeforces: 3470, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "dXqwq", delta: "+0", ratings: { codeforces: 3436, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "Radewoosh", delta: "+0", ratings: { codeforces: 3415, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "Otomachi_Una", delta: "+0", ratings: { codeforces: 3413, codechef: 0, atcoder: 0, leetcode: 0 } },
+  { name: "Um_nik", delta: "+0", ratings: { codeforces: 3400, codechef: 0, atcoder: 0, leetcode: 0 } },
 ];
 
 const platformOptions: { key: Platform; label: string }[] = [
