@@ -1,7 +1,23 @@
 import { useState } from "react";
-import { CheckCircle2, Github, Globe, Code2, UserPlus, X, ArrowUpDown, Check } from "lucide-react";
+import { CheckCircle2, Github, Globe, Code2, UserPlus, X, ArrowUpDown, Check, MapPin, Building2, Calendar, Award, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useTheme } from "./ThemeContext";
+import { useUserInfo } from "./UserInfo";
+
+const rankColor = (rank?: string): string => {
+  if (!rank) return "#808080";
+  const r = rank.toLowerCase();
+  if (r.includes("legendary")) return "#FF0000";
+  if (r.includes("international grandmaster")) return "#FF0000";
+  if (r.includes("grandmaster")) return "#FF0000";
+  if (r.includes("international master")) return "#FF8C00";
+  if (r.includes("master")) return "#FF8C00";
+  if (r.includes("candidate")) return "#AA00AA";
+  if (r.includes("expert")) return "#0000FF";
+  if (r.includes("specialist")) return "#03A89E";
+  if (r.includes("pupil")) return "#008000";
+  return "#808080";
+};
 
 const comparisonData = [
   { topic: "DP", you: 85, friend: 72 }, { topic: "Graphs", you: 78, friend: 90 },
@@ -33,15 +49,24 @@ const platformOptions: { key: Platform; label: string }[] = [
 ];
 
 const platformsList = [
-  { name: "Codeforces", handle: "alex_chen", icon: Code2, color: "#58A6FF" },
-  { name: "AtCoder", handle: "alexc", icon: Globe, color: "#7EE787" },
-  { name: "GitHub", handle: "alexchen-dev", icon: Github, color: "#8B949E" },
+  { name: "AtCoder", handle: "tourist", icon: Globe, color: "#7EE787" },
+  { name: "GitHub", handle: "tourist", icon: Github, color: "#8B949E" },
 ];
 
 const emptyForm = { name: "", codeforces: "", codechef: "", atcoder: "", leetcode: "" };
 
 export function ProfileScreen() {
   const { c } = useTheme();
+  const { handle: HANDLE, displayName: fullName, cfUser, cfStatus, contestCount } = useUserInfo();
+  const rank = cfUser?.rank ?? "legendary grandmaster";
+  const maxRank = cfUser?.maxRank ?? rank;
+  const rColor = rankColor(rank);
+  const mColor = rankColor(maxRank);
+  const avatar = cfUser?.titlePhoto || cfUser?.avatar;
+  const registered = cfUser?.registrationTimeSeconds
+    ? new Date(cfUser.registrationTimeSeconds * 1000).toLocaleDateString(undefined, { year: "numeric", month: "short" })
+    : null;
+
   const [friends, setFriends] = useState<Friend[]>(initialFriends);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -76,18 +101,63 @@ export function ProfileScreen() {
 
   return (
     <div className="px-5 pt-14 pb-4 space-y-5">
-      <div className="rounded-2xl p-5 text-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${c.primary}15 0%, ${c.green}08 100%)`, border: `1px solid ${c.primary}20` }}>
-        <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${c.primary}, ${c.green})`, fontSize: 24, fontWeight: 700, color: "#0D1117" }}>AC</div>
-        <h2 className="mt-3" style={{ color: c.text, fontSize: 20, fontWeight: 700 }}>Alex Chen</h2>
-        <div className="flex items-center justify-center gap-2 mt-1">
-          <span className="px-2.5 py-0.5 rounded-full" style={{ background: `${c.primary}18`, color: c.primary, fontSize: 11, fontWeight: 600 }}>Expert · 1560</span>
-          <CheckCircle2 size={14} color={c.green} />
+      <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: c.surface, border: `1px solid ${rColor}30` }}>
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${rColor}25, transparent 70%)`, transform: "translate(35%, -35%)" }} />
+        <div className="flex items-center gap-4">
+          {avatar ? (
+            <img src={avatar} alt={HANDLE} className="w-20 h-20 rounded-2xl object-cover" style={{ border: `2px solid ${rColor}` }} />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${rColor}, ${rColor}99)`, color: "#fff", fontSize: 28, fontWeight: 700 }}>
+              {fullName.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p style={{ color: rColor, fontSize: 11, fontWeight: 700, textTransform: "capitalize", letterSpacing: 0.3 }}>{rank}</p>
+            <h2 className="truncate" style={{ color: rColor, fontSize: 18, fontWeight: 800, marginTop: 1 }}>{fullName}</h2>
+            <p style={{ color: c.textSecondary, fontSize: 12, marginTop: 2 }}>@{HANDLE}</p>
+            <div className="flex items-baseline gap-1.5 mt-2">
+              <span style={{ color: rColor, fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{cfUser?.rating ?? "—"}</span>
+              <span style={{ color: c.textSecondary, fontSize: 11 }}>
+                (max. <span style={{ color: mColor, fontWeight: 600, textTransform: "capitalize" }}>{maxRank}</span>, {cfUser?.maxRating ?? "—"})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4" style={{ color: c.textSecondary, fontSize: 11 }}>
+          {cfUser?.country && (
+            <span className="flex items-center gap-1"><MapPin size={11} />{cfUser.city ? `${cfUser.city}, ` : ""}{cfUser.country}</span>
+          )}
+          {cfUser?.organization && (
+            <span className="flex items-center gap-1"><Building2 size={11} />{cfUser.organization}</span>
+          )}
+          {registered && (
+            <span className="flex items-center gap-1"><Calendar size={11} />Joined {registered}</span>
+          )}
+          {typeof cfUser?.contribution === "number" && (
+            <span className="flex items-center gap-1"><Award size={11} color={cfUser.contribution >= 0 ? c.green : c.red} />Contrib {cfUser.contribution >= 0 ? "+" : ""}{cfUser.contribution}</span>
+          )}
+          {typeof cfUser?.friendOfCount === "number" && (
+            <span className="flex items-center gap-1"><Users size={11} />{cfUser.friendOfCount.toLocaleString()} friends</span>
+          )}
         </div>
       </div>
 
       <div className="rounded-2xl p-4" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
         <span style={{ color: c.text, fontSize: 14, fontWeight: 600 }}>Connected Platforms</span>
         <div className="mt-3 space-y-2.5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#58A6FF15" }}>
+              <Code2 size={16} color="#58A6FF" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ color: c.text, fontSize: 13, fontWeight: 500 }}>Codeforces</p>
+              <p className="truncate" style={{ color: c.textSecondary, fontSize: 11 }}>
+                @{HANDLE} · <span style={{ color: rColor, fontWeight: 600 }}>{cfUser?.rating ?? "—"}</span>
+              </p>
+            </div>
+            <CheckCircle2 size={14} color={c.green} />
+          </div>
           {platformsList.map((p) => (
             <div key={p.name} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${p.color}15` }}><p.icon size={16} color={p.color} /></div>
@@ -101,11 +171,18 @@ export function ProfileScreen() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {[{ label: "Rating", value: "1560", color: c.primary }, { label: "Solved", value: "342", color: c.green }, { label: "Streak", value: "12d", color: c.yellow }].map((s) => (
-          <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
-            <p style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>{s.value}</p>
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: "Rating", value: cfUser?.rating ?? "—", color: rColor },
+          { label: "Max Rating", value: cfUser?.maxRating ?? "—", color: mColor },
+          { label: "Solved", value: cfStatus.loading ? "…" : cfStatus.solved, color: c.green },
+          { label: "Contests", value: contestCount ?? "…", color: c.primary },
+          { label: "Streak", value: cfStatus.loading ? "…" : `${cfStatus.streak}d`, color: c.yellow },
+          { label: "Upsolve", value: cfStatus.loading ? "…" : cfStatus.upsolve, color: c.orange },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl p-3" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
             <p style={{ color: c.textSecondary, fontSize: 11 }}>{s.label}</p>
+            <p style={{ color: s.color, fontSize: 20, fontWeight: 700, marginTop: 2 }}>{s.value}</p>
           </div>
         ))}
       </div>
